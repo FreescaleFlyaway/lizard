@@ -61,7 +61,10 @@ class m_core:
 
     def output(self):
         #  concat the [qpos, qvel, sensor, ctrl]
-        output = np.concatenate((self.qpos(), self.qvel(), self.sensor(), self.ctrl()))
+        if self.sensor():
+            output = np.concatenate((self.qpos(), self.qvel(), self.sensor(), self.ctrl()))
+        else:
+            output = np.concatenate((self.qpos(), self.qvel(), self.ctrl()))
         return output
   
     def picture(self, size, camera_name):

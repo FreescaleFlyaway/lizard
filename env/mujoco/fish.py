@@ -12,6 +12,7 @@ sensor: 6d
 (torso vel 3d, gygro 3d) 
 '''
 import os
+import math
 import numpy as np
 from env.mujoco.core import m_core
 from env.mujoco.core import attrib
@@ -59,11 +60,7 @@ class fish(m_core):
         #  distance from mouth to target
         mouth_to_target = np.linalg.norm(self.geoms['mouth'] - self.geoms['target'])
         threshold = self.geoms_size['target'][0] * 1.25
-        if mouth_to_target <= threshold:
-            _done = 1
-        else:
-            _done = 0
-        return -mouth_to_target
+        return math.exp(-mouth_to_target)
 
     def swim_done(self):
         mouth_to_target = np.linalg.norm(self.geoms['mouth'] - self.geoms['target'])

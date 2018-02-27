@@ -3,8 +3,8 @@
 
 
 knowledge_dict = dict()
-knowledge_dict['state_dim'] = {'fish':'41'}
-knowledge_dict['action_dim'] = {'fish':'5'}
+knowledge_dict['state_dim'] = {'fish':'41', 'ball':9}
+knowledge_dict['action_dim'] = {'fish':'5', 'ball':2}
 
 
 def network_config(config):

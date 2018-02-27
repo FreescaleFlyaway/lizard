@@ -1,16 +1,16 @@
 # -*- coding:utf-8 -*-
 import json
-import config.knowledge as K
+import knowledge as K
 
 if __name__ == "__main__":
     #  setting configuration:
-    config_name = 'fish_train'
+    config_name = 'ball_train'
 
     config = dict()
-    config['env_type'] = 'fish'
-    config['update_name'] = 'fish'  #  can be none
+    config['env_type'] = 'ball'
+    config['update_name'] = 'ball'  #  can be none
 
-    config['environment'] = 'fish'
+    config['environment'] = 'ball'
 
     config['run_type'] = 'train'
     config['e_update_type'] = 'curriculum'
@@ -20,12 +20,12 @@ if __name__ == "__main__":
 
     #  construction configuration:
     #  action
-    config['a_names'] = 'fish'
+    config['a_names'] = 'ball'
     config['a_trainable'] = 'True'
 
     #  critic
     config['c_activate'] = True
-    config['c_names'] = 'fish'
+    config['c_names'] = 'ball'
     config['c_trainable'] = 'True'
 
     #  activate
@@ -44,17 +44,18 @@ if __name__ == "__main__":
     config['lr_t'] = 1e-4
     config['epsilon'] = 0.2
     
-    
     #  training configuration:
-    config['n_iter'] =  5  #  five is for test
-    config['max_steps_per_epoch'] = 50
-    config['min_steps_per_iter'] = 100
+    config['n_iter'] =  100  #  five is for test
+    config['max_steps_per_epoch'] = 100
+    config['min_steps_per_iter'] = 2000
    
     config['gamma'] = 0.9
 
-    config['a_update_steps'] = 20
-    config['c_update_steps'] = 20
-    config['t_update_steps'] = 20
+    config['batch_num'] = 30
+
+    config['a_update_steps'] = 40
+    config['c_update_steps'] = 40
+    config['t_update_steps'] = 40
 
     #  auto_generating
     config['index'] = 0 if config['update_name'] == 'none' else config['env_type'].split(',').index(config['update_name'])
@@ -70,5 +71,5 @@ if __name__ == "__main__":
 
     #  network:
     K.network_config(config)
-    with open('./config/files/{}.json'.format(config_name), 'w') as f:
+    with open('./files/{}.json'.format(config_name), 'w') as f:
         json.dump(config, f)

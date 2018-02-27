@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*-
 #  training structure can be devided into 3 parts:
+import json
 import numpy as np
 import tensorflow as tf
 import network.ppo as ppo
+from sklearn.utils import shuffle
 import env.mujoco.env_wrapper as ev
 
 
@@ -26,12 +28,18 @@ class Train:
         for itr in range(self.config['n_iter']):
             self.e_update()
             results = self.run()    # results in this iter
-            self.p_update(results)  # update the policy
-            print('iter:{} | reward: {}'.format(itr, results['rewards'].mean())) 
+            #  del the rewards:
 
-    def test(self):
+            print('iter:{} | reward: {}'.format(itr, results['rewards'].mean())) 
+            del results['rewards']
+            self.p_update(results)  # update the policy
+            self.test(itr)
+
+    def test(self, _no=0):
         results = self.run()
-        print('reward: {}'.format(results['rewards'].mean()))
+        for r, a in zip(results['rewards'][:20], results['advantages'][:20]):
+            print('test{}| reward: {}| advantage: {}'.format(_no, r, a))
+            #  cross printing:
         return results
 
     #  all kinds of wrappers are listed down:
@@ -105,11 +113,11 @@ class Train:
             q_val = self.get_q_val(_reward)
             advantage = self.get_advantage(q_val, _value)
             if 'q_vals' not in results.keys():
-                results['rewards'] = np.array(_reward)
+                results['rewards'] = np.array(_reward).reshape([1, -1])
                 results['q_vals'] = q_val
                 results['advantages'] = advantage
             else:
-                results['rewards'] = np.concatenate((results['rewards'], _reward), axis=0)
+                results['rewards'] = np.concatenate((results['rewards'], np.array(_reward).reshape([1, -1])), axis=0)
                 results['q_vals'] = np.concatenate((results['q_vals'], q_val), axis=0)
                 results['advantages'] = np.concatenate((results['advantages'], advantage), axis=0)
             _iter_step += _step
@@ -153,12 +161,40 @@ class Train:
             return self.ac_update
 
     def ac_update(self, results):
+        #  static gradient:
         self.network.update_old_pi()
+        #  shuffle results/ run by batch
+        data_list = []
+        name_list = []
+        for name, data in results.items():
+            name_list.append(name)
+            data_list.append(data)
+    
+        #  batch_nums
+        data_len = data_list[0].shape[0]
+        num_batches = max(data_len // self.config['batch_num'], 1)
+        batch_size = data_len // num_batches
+        data_list = shuffle(*data_list)
+
         for _ in range(self.config['a_update_steps']):
-            self.network.update_a(results)
+            for i in range(num_batches):
+                start = i * batch_size
+                end = (i + 1) * batch_size
+                update_data = {}
+                for name, data in zip(name_list, data_list):
+                    update_data[name] = data[start:end, :]
+
+                self.network.update_a(update_data)
 
         for _ in range(self.config['c_update_steps']):
-            self.network.update_c(results)
+            for i in range(num_batches):
+                start = i * batch_size
+                end = (i + 1) * batch_size
+                update_data = {}
+                for name, data in zip(name_list, data_list):
+                    update_data[name] = data[start:end, :]
+
+                self.network.update_c(update_data)
     
 
 if __name__ == '__main__':
