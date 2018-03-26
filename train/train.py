@@ -37,9 +37,16 @@ class Train:
 
     def test(self, _no=0):
         results = self.run()
-        for r, a in zip(results['rewards'][:20], results['advantages'][:20]):
-            print('test{}| reward: {}| advantage: {}'.format(_no, r, a))
-            #  cross printing:
+        self.network.log(results)
+        print('log the data')
+        print('reward')
+        print(results['rewards'][:10])
+        print('A')
+        print(results['advantages'][:10])
+        print('Q')
+        print(results['q_vals'][:10])
+        print('V')
+        print(results['values'][:10])
         return results
 
     #  all kinds of wrappers are listed down:
@@ -74,14 +81,15 @@ class Train:
         }
         '''
         results = dict()
-        states = self.env.reset()  #  states is in shape of [[step_num1,state1_dim], ...]
         _iter_step = 0
         while(True):
             #  whole iter
+            states = self.env.reset()  #  states is in shape of [[step_num1,state1_dim], ...]
             _step = 0
             _reward = []
             _value = []
             while(True):
+                #  save state
                 for i in range(self.config['attribute_num']):
                     _name = 'state{}'.format(i)
                     if _name not in results.keys():
@@ -113,11 +121,13 @@ class Train:
             q_val = self.get_q_val(_reward)
             advantage = self.get_advantage(q_val, _value)
             if 'q_vals' not in results.keys():
-                results['rewards'] = np.array(_reward).reshape([1, -1])
+                results['values'] = np.array(_value).reshape([-1, 1])
+                results['rewards'] = np.array(_reward).reshape([-1, 1])
                 results['q_vals'] = q_val
                 results['advantages'] = advantage
             else:
-                results['rewards'] = np.concatenate((results['rewards'], np.array(_reward).reshape([1, -1])), axis=0)
+                results['values'] = np.concatenate((results['values'], np.array(_value).reshape([-1, 1])), axis=0)
+                results['rewards'] = np.concatenate((results['rewards'], np.array(_reward).reshape([-1, 1])), axis=0)
                 results['q_vals'] = np.concatenate((results['q_vals'], q_val), axis=0)
                 results['advantages'] = np.concatenate((results['advantages'], advantage), axis=0)
             _iter_step += _step
@@ -138,13 +148,13 @@ class Train:
             else:
                 q_val[i] = rewards[i] + self.config['gamma']*q_val[i+1]
         #  normalization:
-        q_val = (q_val - q_val.mean())/q_val.std()
+        #  q_val = (q_val - q_val.mean())/q_val.std()
         return q_val
 
     def get_advantage(self, q_values, values):
         values = np.array(values).reshape([-1, 1])
         advantage = q_values - values
-        advantage = (advantage - advantage.mean())/advantage.std()
+        #  don't normalize
         return advantage
 
     #  environment update wrapper:

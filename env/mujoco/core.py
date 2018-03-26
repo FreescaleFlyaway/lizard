@@ -14,7 +14,7 @@ class m_core:
         self.geoms = dict()
         self.model = mj.load_model_from_path(filename)
         self.sim = mj.MjSim(self.model, nsubsteps=n_step)
-        # get geom_dict
+        #  get geom_dict
         self.init_state = self.state()
         #  normalize
         self.geoms = dynamic_dict(self.model.geom_names, self.sim.data.geom_xpos)
@@ -22,8 +22,10 @@ class m_core:
 
         self.frange()
         self.xrange()
+        #  start:
+        self.run()
 
-    # normalization
+    #  normalization
     def frange(self):
         ranges = self.model.actuator_ctrlrange
         self.fscaler = []
@@ -74,12 +76,15 @@ class m_core:
     #  set state
     def run(self):
         self.sim.step()
+        self.sim.forward()
 
     def set(self, state):
         self.sim.set_state(state)
 
     def reset(self):
         self.set(self.init_state)
+        #  run to refresh data
+        self.run()
         return self.output_dict()
 
     def pure_step(self, forces):

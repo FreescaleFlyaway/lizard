@@ -22,6 +22,7 @@ class ball(m_core):
             self.roll_attrib()
             self.reward = self.roll_reward
             self.done = self.roll_done
+        self.reset()
 
     #  attribs configuration:
     def roll_attrib(self):
@@ -35,15 +36,26 @@ class ball(m_core):
         a = attrib(name, state_map, geom_map, ctrl_map, ctrl_dim)
         self.attribs.append(a)
         
-    def roll_reset(self):
-        pass
+    def reset(self):
+        #  overwrite:
+        self.set(self.init_state)
+        self.run()
+        #  refresh init btt
+        ball_to_target = np.linalg.norm(self.geoms['ball'] - self.geoms['target'])
+        self.init_btt = ball_to_target
+        return self.output_dict()
 
     def roll_reward(self):
         #  return reward and done
         #  distance from ball to target
         ball_to_target = np.linalg.norm(self.geoms['ball'] - self.geoms['target'])
+        #  change reward:
         threshold = self.geoms_size['target'][0] * 1.25
-        return math.exp(-ball_to_target)
+        if ball_to_target <= threshold:
+            #  biggest reward in it.
+            return 20.0
+        else:
+            return 10.0*(self.init_btt - ball_to_target)
 
     def roll_done(self):
         ball_to_target = np.linalg.norm(self.geoms['ball'] - self.geoms['target'])
@@ -54,8 +66,12 @@ class ball(m_core):
             _done = 0
         return  _done
 
+    def get_btt(self):
+        ball_to_target = np.linalg.norm(self.geoms['ball'] - self.geoms['target'])
+        return ball_to_target
+
 
 if __name__ == '__main__':
     B = ball([])
-    ctrl_list = np.array([0., 0.])
-    print(B.step(ctrl_list))
+    print(B.init_btt)
+    ctrl_list = np.array([1.0, 1.0])

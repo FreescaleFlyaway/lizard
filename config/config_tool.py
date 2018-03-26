@@ -39,23 +39,24 @@ if __name__ == "__main__":
     config['suppress_ratio'] = 1.0
 
     #  trainiing parameters:
-    config['lr_a'] = 1e-4
-    config['lr_c'] = 1e-4
+    config['lr_a'] = 0.1
+    config['lr_c'] = 0.1
     config['lr_t'] = 1e-4
     config['epsilon'] = 0.2
     
     #  training configuration:
     config['n_iter'] =  100  #  five is for test
-    config['max_steps_per_epoch'] = 100
-    config['min_steps_per_iter'] = 2000
+    config['max_steps_per_epoch'] = 10
+    config['min_steps_per_iter'] = 200
    
-    config['gamma'] = 0.9
+    config['gamma'] = 0.3
 
     config['batch_num'] = 30
 
-    config['a_update_steps'] = 40
+    config['a_update_steps'] = 20
+    #  c is important:
     config['c_update_steps'] = 40
-    config['t_update_steps'] = 40
+    config['t_update_steps'] = 20
 
     #  auto_generating
     config['index'] = 0 if config['update_name'] == 'none' else config['env_type'].split(',').index(config['update_name'])
